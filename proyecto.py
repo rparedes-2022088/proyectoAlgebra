@@ -1,72 +1,98 @@
-import numpy as np
+import numpy as np  
 
-def leer_matriz():
-    print("\nIngresa los valores de la matriz A (3x3):")
-    A = []
-    for i in range(3):
-        fila = input(f"Fila {i+1} (3 números separados por espacio): ").strip().split()
+# Función para leer la matriz de coeficientes A (3x3)
+def leerMatriz():
+    print("\nIngresa los valores de la matriz de coeficientes A (3x3):")
+    matriz = []  # Aquí se guardan las filas de la matriz
+
+    for fila_idx in range(3):
+        fila = input(f"Fila {fila_idx + 1} (3 números separados por espacio): ").strip().split()
+
+        # Validar que se ingresen 3 valores
         if len(fila) != 3:
             print("Debes ingresar exactamente 3 números por fila.")
-            return leer_matriz()
+            return leerMatriz()
+
+        # Convertir a tipo float y manejar errores
         try:
-            fila = [float(x) for x in fila]
+            fila = [float(valor) for valor in fila]
         except ValueError:
             print("Solo se permiten números. Intenta de nuevo.")
-            return leer_matriz()
-        A.append(fila)
-    return np.array(A)
+            return leerMatriz()
 
-def leer_vector():
-    print("\nIngresa el vector b (3x1):")
-    fila = input("Tres valores separados por espacio: ").strip().split()
-    if len(fila) != 3:
+        matriz.append(fila)
+
+    # Convertir la lista a un arreglo NumPy 3x3
+    return np.array(matriz)
+
+# Función para leer el vector de demandas b (3x1)
+def leerVector():
+    print("\nIngresa los valores del vector de demanda b (3x1):")
+    entrada = input("Tres valores separados por espacio: ").strip().split()
+
+    # Validar cantidad de valores
+    if len(entrada) != 3:
         print("Debes ingresar exactamente 3 números.")
-        return leer_vector()
+        return leerVector()
+
+    # Convertir los valores a flotantes
     try:
-        b = [float(x) for x in fila]
+        vector_demanda = [float(valor) for valor in entrada]
     except ValueError:
         print("Solo se permiten números. Intenta de nuevo.")
-        return leer_vector()
-    return np.array(b)
+        return leerVector()
 
-def calcular(A, b):
-    detA = np.linalg.det(A)
+    return np.array(vector_demanda)
+
+# Función para calcular la solución del sistema Ax = b
+def resolverSistema(matriz_A, vector_b):
+    determinante = np.linalg.det(matriz_A)
+
     print("\n============================")
     print("Matriz A:")
-    print(A)
-    print(f"\nVector b: {b}")
-    print(f"Determinante det(A) = {detA:.6f}")
+    print(matriz_A)
+    print(f"\nVector b: {vector_b}")
+    print(f"Determinante det(A) = {determinante:.6f}")
 
-    if abs(detA) < 1e-12:
+    # Verificar si la matriz es invertible
+    if abs(determinante) < 1e-12:
         print("\nLa matriz A NO es invertible (determinante ≈ 0).")
         print("Generando matriz alternativa A' (diagonal ajustada)...")
-        A_alt = A.copy()
-        np.fill_diagonal(A_alt, A_alt.diagonal() - 1)
-        det_alt = np.linalg.det(A_alt)
-        print("\nMatriz A':")
-        print(A_alt)
-        print(f"Determinante det(A') = {det_alt:.6f}")
 
-        if abs(det_alt) < 1e-12:
+        matrizAlternativa = matriz_A.copy()
+        np.fill_diagonal(matrizAlternativa, matrizAlternativa.diagonal() - 1)
+        determinante_alternativo = np.linalg.det(matrizAlternativa)
+
+        print("\nMatriz A' (ajustada):")
+        print(matrizAlternativa)
+        print(f"Determinante det(A') = {determinante_alternativo:.6f}")
+
+        # Si la matriz ajustada tampoco es invertible, se detiene
+        if abs(determinante_alternativo) < 1e-12:
             print("\nA' tampoco es invertible. No se puede resolver el sistema.")
             return
         else:
-            Ainv = np.linalg.inv(A_alt)
-            x = Ainv.dot(b)
-            print("\nA'^{-1}:")
-            print(np.round(Ainv, 6))
+            inversaAlternativa = np.linalg.inv(matrizAlternativa)
+            vector_solucion = inversaAlternativa.dot(vector_b)
+
+            print("\nInversa de A' (A'^{-1}):")
+            print(np.round(inversaAlternativa, 6))
             print("\nSolución x (usando A'):")
-            print(np.round(x, 6))
+            print(np.round(vector_solucion, 6))
+
     else:
-        Ainv = np.linalg.inv(A)
-        x = Ainv.dot(b)
-        print("\nA^{-1}:")
-        print(np.round(Ainv, 6))
+        # Calcular inversa y solución si A sí es invertible
+        inversaA = np.linalg.inv(matriz_A)
+        vector_solucion = inversaA.dot(vector_b)
+
+        print("\nInversa de A (A^{-1}):")
+        print(np.round(inversaA, 6))
         print("\nSolución x:")
-        print(np.round(x, 6))
+        print(np.round(vector_solucion, 6))
 
     print("============================\n")
 
+# Función principal (menú y control del programa)
 def main():
     print("===============================================")
     print("  PROYECTO: Optimización de un Sistema de Redes")
@@ -83,25 +109,30 @@ def main():
         print("1. Ingresar matriz y vector manualmente")
         print("2. Usar ejemplo automático (del proyecto original)")
         print("0. Salir")
-        op = input("→ Opción: ").strip()
+        opcion = input("Opción: ").strip()
 
-        if op == "1":
-            A = leer_matriz()
-            b = leer_vector()
-            calcular(A, b)
-        elif op == "2":
-            A = np.array([
+        if opcion == "1":
+            matriz_A = leerMatriz()
+            vector_b = leerVector()
+            resolverSistema(matriz_A, vector_b)
+
+        elif opcion == "2":
+            # Ejemplo automático
+            matriz_A = np.array([
                 [-2.0, 1.0, 1.0],
                 [1.0, -2.0, 1.0],
                 [1.0, 1.0, -2.0]
             ])
-            b = np.array([50.0, 80.0, 120.0])
-            calcular(A, b)
-        elif op == "0":
-            print("\nPrograma finalizado. ¡Hasta luego!")
-            break
-        else:
-            print("Opción inválida. Intenta de nuevo.")
+            vector_b = np.array([50.0, 80.0, 120.0])
+            resolverSistema(matriz_A, vector_b)
 
+        elif opcion == "0":
+            print("\nCerrando el programa...")
+            break
+
+        else:
+            print("Opción inválida. Intenta de nuevo")
+
+# Punto de entrada del programa
 if __name__ == "__main__":
     main()
